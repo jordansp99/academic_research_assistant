@@ -12,6 +12,7 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import QObject, QThread, pyqtSignal, QTimer, QSettings
 from PyQt6.QtWidgets import QDialog, QFormLayout, QDialogButtonBox
 
+# a qdialog is used for the advanced settings to make it a blocking window
 class AdvancedSettingsDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -52,6 +53,7 @@ from logging_config import logger
 
 # this worker runs in a separate thread to prevent the gui from freezing during searches
 class AgentWorker(QObject):
+    # pyqtsignals are used to communicate between the worker thread and the main gui thread
     finished = pyqtSignal()
     status_changed = pyqtSignal(str)
     s2_papers_found = pyqtSignal(list)
@@ -170,6 +172,7 @@ class AgentWorker(QObject):
         wait_thread = threading.Thread(target=wait_for_all)
         wait_thread.start()
 
+# a custom widget is used for each paper to create a more complex layout than a simple list item
 class PaperItemWidget(QWidget):
     def __init__(self, paper_data):
         super().__init__()
@@ -261,9 +264,10 @@ class MainWindow(QMainWindow):
 
         self.spinner_timer = QTimer(self)
         self.spinner_timer.timeout.connect(self.update_spinner)
-        self.animation_chars = ["|", "/", "-", "\\"]
+        self.animation_chars = ["|", "/", "-", "\\]
         self.char_index = 0
 
+        # a qlistwidget is used to display the results as it is simple and efficient
         self.results_list = QListWidget()
         main_layout.addWidget(self.results_list)
 
