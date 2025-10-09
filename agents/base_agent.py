@@ -12,6 +12,7 @@ class BaseAgent(ABC):
         pass
 
 
+    # the run method is the main entry point for an agent's execution cycle
     def run(self, blackboard: dict):
         self.formulate_intentions(blackboard)
         for intention in self.intentions:

@@ -8,6 +8,7 @@ class StorageAgent(BaseAgent):
         self.beliefs['filepath'] = filepath
         self.processed_data_count = 0
 
+    # this method is used to decide what the agent should do next
     def formulate_intentions(self, blackboard):
         if len(blackboard.get("extracted_data", [])) > self.processed_data_count:
             self.beliefs['metadata_list'] = blackboard["extracted_data"]

@@ -22,6 +22,7 @@ class SearchAgent(BaseAgent):
             logger.warning("Semantic Scholar API key not found. Set the S2_API_KEY environment variable for better performance.")
         self.arxiv_client = arxiv.Client(page_size=20, delay_seconds=3, num_retries=3)
 
+    # this method is used to decide what the agent should do next
     def formulate_intentions(self, blackboard):
         if blackboard.get("query") and blackboard.get("papers") is None:
             self.intentions = [lambda: self.search_sources(blackboard)]

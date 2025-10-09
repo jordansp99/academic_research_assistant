@@ -22,6 +22,7 @@ class ExtractionAgent(BaseAgent):
         genai.configure(api_key=os.environ["GEMINI_API_KEY"])
         self.model = genai.GenerativeModel('models/gemini-flash-lite-latest')
 
+    # this method is used to decide what the agent should do next
     def formulate_intentions(self, blackboard):
         self.intentions = []
         papers = blackboard.get("papers", [])
@@ -99,6 +100,7 @@ class ExtractionAgent(BaseAgent):
 
                 content_type = response.headers.get('content-type', '')
 
+                # different content types require different parsing strategies
                 if 'application/pdf' in content_type:
                     logger.info(f"PDF detected, parsing content from: {url}")
                     with io.BytesIO(response.content) as pdf_file:
@@ -119,6 +121,7 @@ class ExtractionAgent(BaseAgent):
 
             logger.info(f"Running metadata extraction model for: {url}")
 
+            # the gemini api can be flaky, so we retry with exponential backoff
             max_retries = 3
             base_delay = 2
             for attempt in range(max_retries):
