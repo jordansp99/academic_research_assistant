@@ -26,9 +26,17 @@ class StorageAgent(BaseAgent):
 
         print(f"saving {len(metadata_list)} items to {filepath}...")
 
-        # we save the data in a structured format that is easy to parse and read
-        harvard_style_references = []
+        # simple deduplication based on doi or url
+        seen = set()
+        unique_papers = []
         for paper in metadata_list:
+            identifier = paper.get('doi') or paper.get('url')
+            if identifier not in seen:
+                unique_papers.append(paper)
+                seen.add(identifier)
+
+        harvard_style_references = []
+        for paper in unique_papers:
             authors = paper.get('authors', [])
             year = paper.get('year', 'N/A')
             title = paper.get('title', 'N/A')
