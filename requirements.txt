@@ -1,0 +1,10 @@
+requests
+beautifulsoup4
+PyQt6
+arxiv
+semanticscholar
+accelerate
+ddgs
+google-generativeai
+python-dotenv
+pdfplumber
