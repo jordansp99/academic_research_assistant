@@ -261,7 +261,7 @@ class MainWindow(QMainWindow):
 
         self.spinner_timer = QTimer(self)
         self.spinner_timer.timeout.connect(self.update_spinner)
-        self.animation_chars = ["|", "/", "-", "\\]
+        self.animation_chars = ["|", "/", "-", "\\"]
         self.char_index = 0
 
         self.results_list = QListWidget()

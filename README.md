@@ -1,34 +1,84 @@
 # Academic Research Assistant
 
-This is a simple application that helps with academic research by searching for papers from various sources and extracting metadata from them.
+## Overview
 
-## Setup
+The Academic Research Assistant is a desktop application designed to streamline the process of finding and collecting academic papers. It provides a user-friendly interface to search for papers from various sources, extract key metadata, and save the results for future reference.
 
-1.  **Install Dependencies:** Install the required Python packages using pip:
+## Features
+
+- **Multi-source Search:** Search for papers across multiple academic databases and search engines, including:
+    - arXiv
+    - Semantic Scholar
+    - PubMed
+    - DuckDuckGo (for general web searches)
+- **Metadata Extraction:** Automatically extracts key information from the search results, such as title, authors, abstract, DOI, and publication year.
+- **PDF Parsing:** Can parse PDF files to extract metadata, even when it is not readily available on the web page.
+- **Advanced Search Options:** Customize the number of papers to fetch from each source.
+- **Persistent Settings:** Your advanced search settings are saved locally, so you don't have to reconfigure them every time you open the application.
+- **Save to JSON:** Save the collected paper information to a JSON file in a structured format for easy integration with other tools.
+
+## How it Works
+
+The application is built using an agent-based architecture, where different agents are responsible for specific tasks:
+
+- **Search Agent:** Responsible for querying the different data sources in parallel.
+- **Extraction Agent:** Responsible for fetching the content from the paper URLs and extracting the metadata. It uses the Gemini API for advanced metadata extraction from unstructured text.
+- **Storage Agent:** Responsible for saving the collected data to a JSON file.
+
+These agents communicate with each other through a central "blackboard", which is a shared data structure that holds the state of the application.
+
+## File Structure
+
+- `gui.py`: The main entry point for the application. It contains the code for the user interface, built with PyQt6.
+- `agents/`: This directory contains the different agents used in the application.
+    - `base_agent.py`: An abstract base class for all agents.
+    - `search_agent.py`: The agent responsible for searching for papers.
+    - `extraction_agent.py`: The agent responsible for extracting metadata.
+    - `storage_agent.py`: The agent responsible for saving the data.
+- `logging_config.py`: Configures the logging for the application.
+- `utils.py`: Contains utility functions used by the agents.
+- `requirements.txt`: A list of the Python dependencies required to run the application.
+- `.env.example`: An example file for the environment variables.
+- `README.md`: This file.
+
+## Setup and Configuration
+
+### 1. Installation
+
+Install the required Python packages using pip:
+
+```bash
+pip install -r requirements.txt
+```
+
+### 2. API Keys
+
+#### Gemini API Key
+
+This project uses the Gemini API to extract metadata from web pages. You will need a Gemini API key to use this feature.
+
+- **Get your API key:** You can get a Gemini API key from the [Google AI Studio](https://aistudio.google.com/app/apikey).
+- **Create a .env file:** Create a `.env` file in the root of the project by copying the `.env.example` file:
 
     ```bash
-    pip install -r requirements.txt
+    cp .env.example .env
     ```
 
-2.  **Gemini API Key:** This project uses the Gemini API to extract metadata from web pages. You will need a Gemini API key to use this feature.
+- **Add your API key to the .env file:** Open the `.env` file and replace `"YOUR_API_KEY"` with your actual Gemini API key.
 
-    *   **Get your API key:** You can get a Gemini API key from the [Google AI Studio](https://aistudio.google.com/app/apikey).
-    *   **Create a .env file:** Create a `.env` file in the root of the project by copying the `.env.example` file:
+#### Semantic Scholar API Key (Optional)
 
-        ```bash
-        cp .env.example .env
-        ```
+This project can use the Semantic Scholar API to fetch paper details. While not required, providing an API key is recommended for higher rate limits.
 
-    *   **Add your API key to the .env file:** Open the `.env` file and replace `"YOUR_API_KEY"` with your actual Gemini API key.
+- **Get your API key:** You can request a Semantic Scholar API key from their official website.
+- **Add your API key to the .env file:** Open the `.env` file and add the following line, replacing `"YOUR_API_KEY"` with your actual Semantic Scholar API key:
+    ```
+    S2_API_KEY="YOUR_API_KEY"
+    ```
 
-3.  **Semantic Scholar API Key (Optional):** This project can use the Semantic Scholar API to fetch paper details. While not required, providing an API key is recommended for higher rate limits.
+### 3. Advanced Settings
 
-    *   **Get your API key:** You can request a Semantic Scholar API key from their official website.
-    *   **Add your API key to the .env file:** Open the `.env` file and add the following line, replacing `"YOUR_API_KEY"` with your actual Semantic Scholar API key:
-        ```
-        S2_API_KEY="YOUR_API_KEY"
-        ```
-
+You can configure the number of papers to fetch from each source by clicking the "Advanced Settings" button in the application.
 
 ## Usage
 
