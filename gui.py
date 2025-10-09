@@ -218,6 +218,8 @@ class MainWindow(QMainWindow):
         self.pubmed_limit = self.settings.value("pubmed_limit", 20, type=int)
         self.ddg_limit = self.settings.value("ddg_limit", 20, type=int)
 
+        self.unique_papers = set()
+
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
         main_layout = QVBoxLayout(central_widget)
@@ -315,6 +317,7 @@ class MainWindow(QMainWindow):
 
         self.search_button.setEnabled(False)
         self.results_list.clear()
+        self.unique_papers.clear()
         self.statusBar.showMessage("Starting search...")
 
         if search_arxiv:
@@ -389,6 +392,15 @@ class MainWindow(QMainWindow):
             self.statusBar.showMessage(status)
 
     def add_paper_item(self, paper_data):
+        title = paper_data.get('title', 'No Title')
+        authors = tuple(paper_data.get('authors', []))
+        paper_tuple = (title, authors)
+
+        if paper_tuple in self.unique_papers:
+            return
+
+        self.unique_papers.add(paper_tuple)
+
         logger.info(f"Adding paper to GUI: {paper_data.get('title')} - {paper_data.get('url')}")
         item = QListWidgetItem(self.results_list)
         widget = PaperItemWidget(paper_data)

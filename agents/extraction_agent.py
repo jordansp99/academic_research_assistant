@@ -117,7 +117,7 @@ class ExtractionAgent(BaseAgent):
 
             truncated_content = content
 
-            prompt = f"First, determine if the following text is from an academic paper. If it is, output the title, authors, publication date, abstract, and DOI. The authors should be a list of strings, with each string being the full name of an author. Return the information in a JSON object with the keys 'title', 'authors', 'publication_date', 'abstract', and 'doi'. If it is not an academic paper, return the string 'not an academic paper'.\n\nText:{truncated_content}"
+            prompt = f"First, determine if the following text is from an academic paper. If it is, output the title, authors, publication date, abstract, and DOI. The authors should be a list of strings, with each string being the full name of an author, with spaces between first and last names. For example, 'John Smith'. Return the information in a JSON object with the keys 'title', 'authors', 'publication_date', 'abstract', and 'doi'. If it is not an academic paper, return the string 'not an academic paper'.\n\nText:{truncated_content}"
 
             logger.info(f"Running metadata extraction model for: {url}")
 
