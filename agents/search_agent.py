@@ -2,7 +2,7 @@ import os
 import arxiv
 import requests
 import xml.etree.ElementTree as ET
-from semanticscholar import SemanticScholar
+
 from .base_agent import BaseAgent
 import threading
 from ddgs import DDGS
@@ -13,13 +13,7 @@ class SearchAgent(BaseAgent):
     def __init__(self):
         super().__init__()
         self.desires = {'find_papers'}
-        s2_api_key = os.environ.get("S2_API_KEY")
-        if s2_api_key:
-            self.s2 = SemanticScholar(api_key=s2_api_key, timeout=10)
-        else:
-            # using the public api is fine, but an api key is better for performance
-            self.s2 = SemanticScholar(timeout=10)
-            logger.warning("Semantic Scholar API key not found. Set the S2_API_KEY environment variable for better performance.")
+
         self.arxiv_client = arxiv.Client(page_size=20, delay_seconds=3, num_retries=3)
 
     # this method is used to decide what the agent should do next
@@ -29,10 +23,10 @@ class SearchAgent(BaseAgent):
         else:
             self.intentions = []
 
-    def search_sources(self, blackboard, s2_callback=None, s2_event=None, pubmed_callback=None, pubmed_event=None, arxiv_callback=None, arxiv_event=None, web_callback=None, web_event=None):
+    def search_sources(self, blackboard, pubmed_callback=None, pubmed_event=None, arxiv_callback=None, arxiv_event=None, web_callback=None, web_event=None):
         query = blackboard["query"]
         arxiv_limit = blackboard.get("arxiv_limit", 20)
-        s2_limit = blackboard.get("s2_limit", 20)
+
         pubmed_limit = blackboard.get("pubmed_limit", 20)
         ddg_limit = blackboard.get("ddg_limit", 20)
         search_arxiv_flag = blackboard.get("search_arxiv", True)
@@ -47,9 +41,7 @@ class SearchAgent(BaseAgent):
             arxiv_thread = threading.Thread(target=self.search_arxiv_thread, args=(query, arxiv_limit, arxiv_callback, arxiv_event))
             arxiv_thread.start()
 
-        if search_s2_flag:
-            s2_thread = threading.Thread(target=self.search_s2_thread, args=(query, s2_limit, s2_callback, s2_event))
-            s2_thread.start()
+
 
         if search_pubmed_flag:
             pubmed_thread = threading.Thread(target=self.search_pubmed_thread, args=(query, pubmed_limit, pubmed_callback, pubmed_event))
@@ -89,32 +81,7 @@ class SearchAgent(BaseAgent):
             if event:
                 event.set()
 
-    def search_s2_thread(self, query, limit, callback=None, event=None):
-        try:
-            logger.info("Starting Semantic Scholar search...")
-            results = self.s2.search_paper(query, limit=limit, fields=['url', 'title', 'abstract', 'authors', 'year', 'venue', 'externalIds'])
-            s2_papers_list = list(results)
-            logger.info("Semantic Scholar search finished.")
-            s2_papers = []
-            for item in s2_papers_list:
-                doi = item.get('externalIds', {}).get('DOI')
-                s2_papers.append({
-                    'title': item['title'],
-                    'url': item['url'],
-                    'authors': [author['name'] for author in item['authors']],
-                    'abstract': item['abstract'],
-                    'source': 'Semantic Scholar',
-                    'year': item['year'],
-                    'venue': item['venue'],
-                    'doi': doi
-                })
-            if callback:
-                callback(s2_papers)
-        except Exception as e:
-            logger.error(f"An error occurred in the Semantic Scholar search thread: {e}")
-        finally:
-            if event:
-                event.set()
+
 
     def search_pubmed_thread(self, query, limit, callback=None, event=None):
         try:
