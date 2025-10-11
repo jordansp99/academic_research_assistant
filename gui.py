@@ -21,12 +21,12 @@ class AdvancedSettingsDialog(QDialog):
         self.layout = QFormLayout(self)
 
         self.arxiv_limit_input = QLineEdit("20")
-        self.s2_limit_input = QLineEdit("20")
+
         self.pubmed_limit_input = QLineEdit("20")
         self.ddg_limit_input = QLineEdit("20")
 
         self.layout.addRow("arXiv Limit:", self.arxiv_limit_input)
-        self.layout.addRow("Semantic Scholar Limit:", self.s2_limit_input)
+
         self.layout.addRow("PubMed Limit:", self.pubmed_limit_input)
         self.layout.addRow("DuckDuckGo Limit:", self.ddg_limit_input)
 
@@ -39,7 +39,6 @@ class AdvancedSettingsDialog(QDialog):
     def get_limits(self):
         return {
             "arxiv": self.arxiv_limit_input.text(),
-            "s2": self.s2_limit_input.text(),
             "pubmed": self.pubmed_limit_input.text(),
             "ddg": self.ddg_limit_input.text(),
         }
@@ -56,24 +55,18 @@ class AgentWorker(QObject):
     # pyqtsignals are used to communicate between the worker thread and the main gui thread
     finished = pyqtSignal()
     status_changed = pyqtSignal(str)
-    s2_papers_found = pyqtSignal(list)
-    pubmed_papers_found = pyqtSignal(list)
-    arxiv_papers_found = pyqtSignal(list)
-    arxiv_search_finished = pyqtSignal()
-    s2_search_finished = pyqtSignal()
+
     pubmed_search_finished = pyqtSignal()
     general_web_papers_found = pyqtSignal(list)
     general_web_search_finished = pyqtSignal()
 
-    def __init__(self, query, search_arxiv, search_semantic_scholar, search_pubmed, search_general, arxiv_limit, s2_limit, pubmed_limit, ddg_limit):
+    def __init__(self, query, search_arxiv, search_pubmed, search_general, arxiv_limit, pubmed_limit, ddg_limit):
         super().__init__()
         self.query = query
         self.search_arxiv = search_arxiv
-        self.search_semantic_scholar = search_semantic_scholar
         self.search_pubmed = search_pubmed
         self.search_general = search_general
         self.arxiv_limit = arxiv_limit
-        self.s2_limit = s2_limit
         self.pubmed_limit = pubmed_limit
         self.ddg_limit = ddg_limit
 
@@ -85,27 +78,19 @@ class AgentWorker(QObject):
             "extracted_data": [],
             "status": "running",
             "search_arxiv": self.search_arxiv,
-            "search_semantic_scholar": self.search_semantic_scholar,
             "search_pubmed": self.search_pubmed,
             "search_web": self.search_general,
             "arxiv_limit": self.arxiv_limit,
-            "s2_limit": self.s2_limit,
             "pubmed_limit": self.pubmed_limit,
             "ddg_limit": self.ddg_limit
         }
         search_agent = SearchAgent()
         extraction_agent = ExtractionAgent()
-        s2_event = threading.Event()
         pubmed_event = threading.Event()
         arxiv_event = threading.Event()
         web_event = threading.Event()
 
-        def s2_callback(papers):
-            logger.info("Semantic Scholar search finished.")
-            self.status_changed.emit(f"Semantic Scholar search complete. Found {len(papers)} papers.")
-            self.s2_papers_found.emit(papers)
-            self.s2_search_finished.emit()
-            s2_event.set()
+
 
         def pubmed_callback(papers):
             logger.info("PubMed search finished.")
@@ -150,16 +135,14 @@ class AgentWorker(QObject):
             web_event.set()
 
         logger.info("Starting search sources...")
-        search_agent.search_sources(blackboard, s2_callback=s2_callback, s2_event=s2_event, pubmed_callback=pubmed_callback, pubmed_event=pubmed_event, arxiv_callback=arxiv_callback, arxiv_event=arxiv_event, web_callback=web_callback, web_event=web_event)
+        search_agent.search_sources(blackboard, pubmed_callback=pubmed_callback, pubmed_event=pubmed_event, arxiv_callback=arxiv_callback, arxiv_event=arxiv_event, web_callback=web_callback, web_event=web_event)
 
         def wait_for_all():
             logger.info("Waiting for all search threads to complete...")
             if self.search_arxiv:
                 logger.info("Waiting for arXiv thread...")
                 arxiv_event.wait()
-            if self.search_semantic_scholar:
-                logger.info("Waiting for Semantic Scholar thread...")
-                s2_event.wait()
+
             if self.search_pubmed:
                 logger.info("Waiting for PubMed thread...")
                 pubmed_event.wait()
@@ -214,7 +197,6 @@ class MainWindow(QMainWindow):
         self.settings = QSettings("MyCompany", "AcademicResearchAssistant")
 
         self.arxiv_limit = self.settings.value("arxiv_limit", 20, type=int)
-        self.s2_limit = self.settings.value("s2_limit", 20, type=int)
         self.pubmed_limit = self.settings.value("pubmed_limit", 20, type=int)
         self.ddg_limit = self.settings.value("ddg_limit", 20, type=int)
 
@@ -236,9 +218,7 @@ class MainWindow(QMainWindow):
         self.arxiv_checkbox = QCheckBox("arXiv")
         self.arxiv_checkbox.setChecked(False)
         self.arxiv_loading_label = QLabel()
-        self.semantic_scholar_checkbox = QCheckBox("Semantic Scholar")
-        self.semantic_scholar_checkbox.setChecked(False)
-        self.s2_loading_label = QLabel()
+
         self.pubmed_checkbox = QCheckBox("PubMed")
         self.pubmed_checkbox.setChecked(False)
         self.pubmed_loading_label = QLabel()
@@ -247,8 +227,6 @@ class MainWindow(QMainWindow):
         self.general_web_loading_label = QLabel()
         options_layout.addWidget(self.arxiv_checkbox)
         options_layout.addWidget(self.arxiv_loading_label)
-        options_layout.addWidget(self.semantic_scholar_checkbox)
-        options_layout.addWidget(self.s2_loading_label)
         options_layout.addWidget(self.pubmed_checkbox)
         options_layout.addWidget(self.pubmed_loading_label)
         options_layout.addWidget(self.general_web_checkbox)
@@ -260,7 +238,6 @@ class MainWindow(QMainWindow):
         main_layout.addWidget(self.advanced_settings_button)
 
         self.arxiv_loading_label.hide()
-        self.s2_loading_label.hide()
         self.pubmed_loading_label.hide()
         self.general_web_loading_label.hide()
 
@@ -285,19 +262,16 @@ class MainWindow(QMainWindow):
     def open_advanced_settings(self):
         dialog = AdvancedSettingsDialog(self)
         dialog.arxiv_limit_input.setText(str(self.arxiv_limit))
-        dialog.s2_limit_input.setText(str(self.s2_limit))
         dialog.pubmed_limit_input.setText(str(self.pubmed_limit))
         dialog.ddg_limit_input.setText(str(self.ddg_limit))
 
         if dialog.exec():
             limits = dialog.get_limits()
             self.arxiv_limit = int(limits["arxiv"])
-            self.s2_limit = int(limits["s2"])
             self.pubmed_limit = int(limits["pubmed"])
             self.ddg_limit = int(limits["ddg"])
 
             self.settings.setValue("arxiv_limit", self.arxiv_limit)
-            self.settings.setValue("s2_limit", self.s2_limit)
             self.settings.setValue("pubmed_limit", self.pubmed_limit)
             self.settings.setValue("ddg_limit", self.ddg_limit)
 
@@ -306,12 +280,10 @@ class MainWindow(QMainWindow):
         if not query: return
 
         search_arxiv = self.arxiv_checkbox.isChecked()
-        search_semantic_scholar = self.semantic_scholar_checkbox.isChecked()
         search_pubmed = self.pubmed_checkbox.isChecked()
         search_general = self.general_web_checkbox.isChecked()
 
         arxiv_limit = self.arxiv_limit
-        s2_limit = self.s2_limit
         pubmed_limit = self.pubmed_limit
         ddg_limit = self.ddg_limit
 
@@ -322,8 +294,6 @@ class MainWindow(QMainWindow):
 
         if search_arxiv:
             self.arxiv_loading_label.show()
-        if search_semantic_scholar:
-            self.s2_loading_label.show()
         if search_pubmed:
             self.pubmed_loading_label.show()
 
@@ -331,7 +301,7 @@ class MainWindow(QMainWindow):
 
         # each search is run in a separate thread to avoid blocking the gui
         self.thread = QThread()
-        self.worker = AgentWorker(query, search_arxiv, search_semantic_scholar, search_pubmed, search_general, arxiv_limit, s2_limit, pubmed_limit, ddg_limit)
+        self.worker = AgentWorker(query, search_arxiv, search_pubmed, search_general, arxiv_limit, pubmed_limit, ddg_limit)
         self.worker.moveToThread(self.thread)
 
         self.thread.started.connect(self.worker.run)
@@ -339,14 +309,12 @@ class MainWindow(QMainWindow):
         self.worker.finished.connect(self.worker.deleteLater)
         self.thread.finished.connect(self.thread.deleteLater)
         self.worker.arxiv_papers_found.connect(self.add_arxiv_papers)
-        self.worker.s2_papers_found.connect(self.add_s2_papers)
         self.worker.pubmed_papers_found.connect(self.add_pubmed_papers)
         self.worker.general_web_papers_found.connect(self.add_general_web_papers)
         self.worker.status_changed.connect(self.handle_status_change)
         self.thread.finished.connect(lambda: self.search_button.setEnabled(True))
 
         self.worker.arxiv_search_finished.connect(self.handle_arxiv_finished)
-        self.worker.s2_search_finished.connect(self.handle_s2_finished)
         self.worker.pubmed_search_finished.connect(self.handle_pubmed_finished)
         self.worker.general_web_search_finished.connect(self.handle_general_web_finished)
 
@@ -357,8 +325,6 @@ class MainWindow(QMainWindow):
         char = self.animation_chars[self.char_index]
         if self.arxiv_loading_label.isVisible():
             self.arxiv_loading_label.setText(char)
-        if self.s2_loading_label.isVisible():
-            self.s2_loading_label.setText(char)
         if self.pubmed_loading_label.isVisible():
             self.pubmed_loading_label.setText(char)
 
@@ -366,9 +332,7 @@ class MainWindow(QMainWindow):
         self.arxiv_loading_label.hide()
         self.check_all_searches_finished()
 
-    def handle_s2_finished(self):
-        self.s2_loading_label.hide()
-        self.check_all_searches_finished()
+
 
     def handle_pubmed_finished(self):
         self.pubmed_loading_label.hide()
@@ -380,7 +344,6 @@ class MainWindow(QMainWindow):
 
     def check_all_searches_finished(self):
         if not self.arxiv_loading_label.isVisible() and \
-           not self.s2_loading_label.isVisible() and \
            not self.pubmed_loading_label.isVisible() and \
            not self.general_web_loading_label.isVisible():
             self.spinner_timer.stop()
@@ -414,11 +377,7 @@ class MainWindow(QMainWindow):
         for paper in papers:
             self.add_paper_item(paper)
 
-    def add_s2_papers(self, papers):
-        if not papers:
-            return
-        for paper in papers:
-            self.add_paper_item(paper)
+
 
     def add_pubmed_papers(self, papers):
         if not papers:

@@ -8,7 +8,6 @@ The Academic Research Assistant is a desktop application designed to simplify th
 
 - **Multi-source Search:** Search for papers across multiple academic databases and search engines, including:
     - arXiv
-    - Semantic Scholar
     - PubMed
     - DuckDuckGo (for general web searches)
 - **Metadata Extraction:** Automatically extracts key information from the search results, such as the title, authors, abstract, DOI, and publication year.
@@ -66,15 +65,7 @@ This project relies on the Gemini API to extract metadata from web pages. A Gemi
 
 - **Add your API key to the .env file:** Open the `.env` file and replace `"YOUR_API_KEY"` with your actual Gemini API key.
 
-#### Semantic Scholar API Key (Optional)
 
-This project can utilise the Semantic Scholar API to fetch paper details. While not mandatory, supplying an API key is highly recommended to benefit from higher rate limits.
-
-- **Obtain your API key:** You can request a Semantic Scholar API key from their official website.
-- **Add your API key to the .env file:** Open the `.env` file and add the following line, replacing `"YOUR_API_KEY"` with your actual Semantic Scholar API key:
-    ```
-    S2_API_KEY="YOUR_API_KEY"
-    ```
 
 ### 3. Advanced Settings
 
