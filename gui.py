@@ -55,7 +55,9 @@ class AgentWorker(QObject):
     # pyqtsignals are used to communicate between the worker thread and the main gui thread
     finished = pyqtSignal()
     status_changed = pyqtSignal(str)
-
+    arxiv_papers_found = pyqtSignal(list)
+    pubmed_papers_found = pyqtSignal(list)
+    arxiv_search_finished = pyqtSignal()
     pubmed_search_finished = pyqtSignal()
     general_web_papers_found = pyqtSignal(list)
     general_web_search_finished = pyqtSignal()
